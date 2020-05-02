@@ -50,8 +50,7 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
   const wchar_t* model_path = L"squeezenet.onnx";
 #else
-  const char* model_path = "resnet.onnx";
-  //const char* model_path = "quantized_resnet_static.onnx";
+  const char* model_path = "mnist-8.onnx";
 #endif
 
   printf("Using Onnxruntime C API\n");
@@ -107,9 +106,9 @@ int main(int argc, char* argv[]) {
   // Input 0 : type = 1
   // Input 0 : num_dims = 4
   // Input 0 : dim 0 = 1
-  // Input 0 : dim 1 = 3
-  // Input 0 : dim 2 = 224
-  // Input 0 : dim 3 = 224
+  // Input 0 : dim 1 = 1
+  // Input 0 : dim 2 = 28
+  // Input 0 : dim 3 = 28
 
   //*************************************************************************
   // Similar operations to get output node information.
@@ -119,10 +118,10 @@ int main(int argc, char* argv[]) {
   //*************************************************************************
   // Score the model using sample data, and inspect values
 
-  size_t input_tensor_size = 224 * 224 * 3;  // simplify ... using known dim values to calculate size
+  size_t input_tensor_size = 28 * 28 * 3;  // simplify ... using known dim values to calculate size
                                              // use OrtGetTensorShapeElementCount() to get official size!
   std::vector<float> input_tensor_values(input_tensor_size);
-  std::vector<const char*> output_node_names = {"softmaxout_1"};
+  std::vector<const char*> output_node_names = {"Plus214_Output_0"};
 
   // initialize input data with values in [0.0, 1.0]
   for (size_t i = 0; i < input_tensor_size; i++)
@@ -148,10 +147,10 @@ int main(int argc, char* argv[]) {
   // Get pointer to output tensor float values
   float* floatarr;
   CheckStatus(g_ort->GetTensorMutableData(output_tensor, (void**)&floatarr));
-  assert(std::abs(floatarr[0] - 0.000045) < 1e-6);
+  //assert(std::abs(floatarr[0] - 0.000045) < 1e-6);
 
-  // score the model, and print scores for first 5 classes
-  for (int i = 0; i < 5; i++)
+  // score the model, and print scores for first 10 classes
+  for (int i = 0; i < 10; i++)
     printf("Score for class [%d] =  %f\n", i, floatarr[i]);
 
   // Results should be as below...
