@@ -50,7 +50,8 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
   const wchar_t* model_path = L"squeezenet.onnx";
 #else
-  const char* model_path = "squeezenet.onnx";
+  const char* model_path = "resnet.onnx";
+  //const char* model_path = "quantized_resnet_static.onnx";
 #endif
 
   printf("Using Onnxruntime C API\n");
@@ -120,7 +121,6 @@ int main(int argc, char* argv[]) {
 
   size_t input_tensor_size = 224 * 224 * 3;  // simplify ... using known dim values to calculate size
                                              // use OrtGetTensorShapeElementCount() to get official size!
-
   std::vector<float> input_tensor_values(input_tensor_size);
   std::vector<const char*> output_node_names = {"softmaxout_1"};
 
@@ -130,6 +130,7 @@ int main(int argc, char* argv[]) {
 
   // create input tensor object from data values
   OrtMemoryInfo* memory_info;
+
   CheckStatus(g_ort->CreateCpuMemoryInfo(OrtArenaAllocator, OrtMemTypeDefault, &memory_info));
   OrtValue* input_tensor = NULL;
   CheckStatus(g_ort->CreateTensorWithDataAsOrtValue(memory_info, input_tensor_values.data(), input_tensor_size * sizeof(float), input_node_dims.data(), 4, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT, &input_tensor));
