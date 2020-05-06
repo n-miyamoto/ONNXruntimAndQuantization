@@ -24,6 +24,10 @@ def reshape(inputs, attributes, outputs):
 
 
 def conv(inputs, attributes, outputs):
+    print(attributes)
+
+
+
     in_tensor = inputs[0]
     weight = inputs[1]
     out_tensor = outputs[0]
@@ -111,8 +115,38 @@ def relu(inputs, attributes, outputs):
                     out_tensor.float_data[i] = x
 
 
-def maxpool(inputs, attributes, output):
-    print("TODO: impl maxpooling")
+def maxpool(inputs, attributes, outputs):
+    in_tensor = inputs[0]
+    out_tensor = outputs[0]
+
+    kernel_width = attributes[0].ints[0]
+    kernel_heigh = attributes[0].ints[1]
+
+    stride_x = attributes[1].ints[0]
+    stride_y = attributes[1].ints[1]
+
+    in_ch = in_tensor.dims[1]
+    width = in_tensor.dims[2]//stride_x
+    height = in_tensor.dims[3]//stride_y
+
+    out_tensor.dims = [1] * 4
+    out_tensor.dims[1] = in_ch
+    out_tensor.dims[2] = width
+    out_tensor.dims[3] = height
+    out_tensor.float_data = [0] * in_ch*width*height
+    out_tensor.data_type = "FLOAT"
+
+    for c in range(in_ch):
+        for y in range(height):
+            for x in range(width):
+                index_out = c*height*width + y*width + x
+                l = []
+                for ky in range(kernel_heigh):
+                    for kx in range(kernel_width):
+                        index = c*height*width + (y+ky)*width + (x+ky)
+                        d =in_tensor.float_data[index]
+                        l.append(d)
+                out_tensor.float_data[index_out] = max(l)
 
 
 def matmul(inputs, attributes, output):
