@@ -26,21 +26,24 @@ def reshape(inputs, attributes, outputs):
 def conv(inputs, attributes, outputs):
     print(attributes)
 
-
-
     in_tensor = inputs[0]
     weight = inputs[1]
     out_tensor = outputs[0]
 
+    kernel_width = attributes[0].ints[0]
+    kernel_height = attributes[0].ints[1]
+
+    stride_x = attributes[1].ints[0]
+    stride_y = attributes[1].ints[1]
+
     in_ch = in_tensor.dims[1]
     in_width = in_tensor.dims[2]
     in_height = in_tensor.dims[3]
-    out_ch = weight.dims[0]
-    kernel_width = weight.dims[2]
-    kernel_height = weight.dims[3]
 
-    height = in_height
-    width = in_width
+    out_ch = weight.dims[0]
+
+    width = in_width//stride_x
+    height = in_height//stride_y
 
     out_tensor.data_type = "FLOAT"
 
@@ -59,11 +62,12 @@ def conv(inputs, attributes, outputs):
                         for c_in in range(in_ch):
                             k = c_in * (kernel_height*kernel_width) + \
                                 kernel_width*kh + kw
-                            i = c_in * (height*width) + width * h + w
+                            i = c_in * (height*width*stride_x*stride_y) + \
+                                width * stride_y * h + w * stride_x
                             flag = 1
-                            if h > height - kernel_height/2:
+                            if h*stride_y > height * stride_y - kernel_height/2:
                                 flag = 0
-                            if w > width - kernel_width/2:
+                            if w*stride_x > width * stride_x - kernel_width/2:
                                 flag = 0
                             sum += flag * \
                                 in_tensor.float_data[i] * weight.float_data[k]
@@ -144,7 +148,7 @@ def maxpool(inputs, attributes, outputs):
                 for ky in range(kernel_heigh):
                     for kx in range(kernel_width):
                         index = c*height*width + (y+ky)*width + (x+ky)
-                        d =in_tensor.float_data[index]
+                        d = in_tensor.float_data[index]
                         l.append(d)
                 out_tensor.float_data[index_out] = max(l)
 
