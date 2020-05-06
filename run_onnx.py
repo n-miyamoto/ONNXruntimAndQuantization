@@ -4,9 +4,25 @@ from enum import Enum
 
 
 def reshape(inputs, attributes, outputs):
-    print("TODO: impl reshape")
-    # for i in inputs:
-    #     print(i.name)
+    # prepare in & out
+    in_tensor = inputs[0]
+    shape = inputs[1]
+    out_tensor = outputs[0]
+
+    print(shape)
+
+    # set dimension
+    for dim in shape.int64_data:
+        out_tensor.dim.append(dim)
+
+    # set data
+    for data in in_tensor.float_data:
+        out_tensor.float_data.append(data)
+
+    # set data type
+    out_tensor.data_type = "FLOAT"
+
+    print(out_tensor)
 
 
 def conv(inputs, attributes, outputs):
@@ -75,7 +91,7 @@ class ONNXrunner:
 
         self.variables = {}
         for value in self.model.graph.value_info:
-            self.variables[value.name] = tensor()
+            self.variables[value.name] = Tensor()
 
         self.var_ref_count = {}
         for node in self.model.graph.node:
@@ -101,6 +117,7 @@ class ONNXrunner:
     def run(self):
         for n in self.execution_queue:
             # set operator
+            print(self.model.graph.node[n].op_type)
             operator = Operators[self.model.graph.node[n].op_type]
 
             # set input tensors
@@ -123,7 +140,11 @@ class ONNXrunner:
             attributes = self.model.graph.node[n].attribute
 
             # set output tensors
-            outputs = self.model.graph.node[n].output
+            outputs = []
+            for o in self.model.graph.node[n].output:
+                out = Tensor()
+                out.name = o
+                outputs.append(out)
 
             # run kernel
             operator(inputs, attributes, outputs)
@@ -135,19 +156,33 @@ class ONNXrunner:
                         del self.variables[i.name]
 
 
-class tensor:
+class Tensor:
     def __init__(self):
         self.dim = []
         self.float_data = []
         self.name = ""
+        self.data_type = ""
+
+    def __repr__(self):
+        s = ""
+        for d in self.dim:
+            s += "dims: " + str(d) + "\n"
+        s += "data_type: " + str(self.data_type) + "\n"
+        s += "name: " + self.name + "\n"
+
+        # for d in self.float_data:
+        #    s += "data: " + str(d) + "\n"
+
+        return s
 
 
 def main():
 
     # create input tensor
-    input_tensor = tensor()
+    input_tensor = Tensor()
     input_tensor.dims = [1, 1, 28, 28]
     input_tensor.float_data = []
+    input_tensor.data_type = "FLOAT"
     for i in range(28):
         for j in range(28):
             input_tensor.float_data.append((i*28+j)/(28*28))
@@ -158,11 +193,11 @@ def main():
     runner.set_input([input_tensor])
 
     # debug
-    print(runner.output_name_to_id)
-    print(runner.input_tensor_name_to_id)
-    print(runner.initializer_name_to_id)
-    print(runner.variables)
-    print(runner.var_ref_count)
+    # print(runner.output_name_to_id)
+    # print(runner.input_tensor_name_to_id)
+    # print(runner.initializer_name_to_id)
+    # print(runner.variables)
+    # print(runner.var_ref_count)
 
     runner.run()
 
