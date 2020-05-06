@@ -32,8 +32,8 @@ def conv(inputs, attributes, outputs):
     in_width = in_tensor.dims[2]
     in_height = in_tensor.dims[3]
     out_ch = weight.dims[0]
-    kernel_width = weight.dims[2]    
-    kernel_height = weight.dims[3]    
+    kernel_width = weight.dims[2]
+    kernel_height = weight.dims[3]
 
     height = in_height
     width = in_width
@@ -53,15 +53,18 @@ def conv(inputs, attributes, outputs):
                 for kh in range(kernel_height):
                     for kw in range(kernel_width):
                         for c_in in range(in_ch):
-                            k = c_in * (kernel_height*kernel_width) + kernel_width*kh + kw
+                            k = c_in * (kernel_height*kernel_width) + \
+                                kernel_width*kh + kw
                             i = c_in * (height*width) + width * h + w
                             flag = 1
                             if h > height - kernel_height/2:
                                 flag = 0
                             if w > width - kernel_width/2:
                                 flag = 0
-                            sum += flag * in_tensor.float_data[i] * weight.float_data[k]
+                            sum += flag * \
+                                in_tensor.float_data[i] * weight.float_data[k]
                 out_tensor.float_data.append(sum)
+
 
 def add(inputs, attributes, outputs):
     in_tensor = inputs[0]
@@ -73,7 +76,7 @@ def add(inputs, attributes, outputs):
     height = in_tensor.dims[3]
 
     out_tensor.float_data = [0] * in_ch*width*height
-    for i,d in enumerate(in_tensor.dims):
+    for i, d in enumerate(in_tensor.dims):
         out_tensor.dims.append(d)
 
     for c in range(in_ch):
@@ -82,6 +85,7 @@ def add(inputs, attributes, outputs):
             for w in range(width):
                 i = width*height*c + h*width + w
                 out_tensor.float_data[i] = b + in_tensor.float_data[i]
+
 
 def relu(inputs, attributes, outputs):
     in_tensor = inputs[0]
@@ -105,11 +109,6 @@ def relu(inputs, attributes, outputs):
                 x = in_tensor.float_data[i]
                 if x > 0:
                     out_tensor.float_data[i] = x
-                    
-
-
-
-
 
 
 def maxpool(inputs, attributes, output):
@@ -159,7 +158,6 @@ class ONNXrunner:
         self.output_name_to_id = {}
         for i, output in enumerate(self.model.graph.output):
             self.output_name_to_id[output.name] = i
-
 
         self.variables = {}
         for value in self.model.graph.value_info:
@@ -224,8 +222,6 @@ class ONNXrunner:
             operator(inputs, attributes, outputs)
             print(outputs[0])
 
-
-
             for i in inputs:
                 if i.name in self.var_ref_count:
                     self.var_ref_count[i.name] -= 1
@@ -246,7 +242,7 @@ class Tensor:
             s += "dims: " + str(d) + "\n"
         s += "data_type: " + str(self.data_type) + "\n"
         s += "name: " + self.name + "\n"
-        #for d in self.float_data:
+        # for d in self.float_data:
         #   s += "data: " + str(d) + "\n"
 
         return s
