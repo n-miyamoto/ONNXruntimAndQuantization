@@ -79,6 +79,8 @@ def add(inputs, attributes, outputs):
     bias = inputs[1]
     out_tensor = outputs[0]
 
+    print(in_tensor)
+
     in_ch = in_tensor.dims[1]
     width = in_tensor.dims[2]
     height = in_tensor.dims[3]
@@ -153,8 +155,41 @@ def maxpool(inputs, attributes, outputs):
                 out_tensor.float_data[index_out] = max(l)
 
 
-def matmul(inputs, attributes, output):
+def matmul(inputs, attributes, outputs):
     print("TODO: impl matmal")
+    print(inputs[0].name)
+    print(inputs[1].name)
+    print(outputs[0])
+
+    in_matrix_A = inputs[0]
+    in_matrix_B = inputs[1]
+    out_tensor = outputs[0]
+
+    col_A = in_matrix_A.dims[1]
+    row_A = in_matrix_A.dims[0]
+
+    col_B = in_matrix_B.dims[1]
+    row_B = in_matrix_B.dims[0]
+
+    print(col_A)
+    print(row_A)
+    print(col_B)
+    print(row_B)
+
+    assert col_A == row_B, 'matrix row & col mismatch'
+
+    out_tensor.dims = [0] * 2
+    out_tensor.dims[0] = row_A
+    out_tensor.dims[1] = col_B
+    out_tensor.data_type = "FLOAT"
+    out_tensor.float_data = [0] * row_A * col_B
+    for i in range(row_A):
+        for j in range(col_B):
+            sum = 0
+            for k in range(col_A):
+                sum += in_matrix_A.float_data[i*col_A +
+                                              k] * in_matrix_B.float_data[k*col_B + j]
+            out_tensor.float_data[i*col_B+j]
 
 
 Operators = {
@@ -200,6 +235,8 @@ class ONNXrunner:
         self.variables = {}
         for value in self.model.graph.value_info:
             self.variables[value.name] = Tensor()
+        for output in self.model.graph.output:
+            self.variables[output.name] = Tensor()
 
         self.var_ref_count = {}
         for node in self.model.graph.node:
